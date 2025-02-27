@@ -1,0 +1,56 @@
+CREATE TABLE Lieux(
+ID INT PRIMARY KEY,
+Nom TEXT,
+Description TEXT,
+);
+
+CREATE TABLE Objets(
+ID INT PRIMARY KEY,
+Nom TEXT,
+Description TEXT,
+ID_lieu INT FOREIGN KEY,
+);
+
+CREATE TABLE Joueurs(
+ID INT PRIMARY KEY,
+Nom TEXT,
+Vie INT,
+Force INT,
+Position_ID INT FOREIGN KEY,
+);
+
+CREATE TABLE Png(
+ID INT PRIMARY KEY,
+Nom TEXT,
+Description TEXT,
+ID_lieu INT FOREIGN KEY,
+Dialogue TEXT,
+);
+
+CREATE TABLE Ennemis(
+ID INT PRIMARY KEY,
+Nom TEXT,
+Vie INT,
+Force INT,
+ID_lieu INT FOREIGN KEY;
+);
+
+CREATE TABLE Inventaire(
+ID INT PRIMARY KEY,
+ID_joueur INT FOREIGN KEY,
+ID_objet INT FOREIGN KEY,
+);
+
+CREATE TABLE Quetes(
+ID INT PRIMARY KEY,
+Description TEXT,
+IsComplete INT,
+ID_joueur INT FOREIGN KEY,
+ID_png INT FOREIGN KEY,
+);
+
+CREATE TABLE Png_quetes(
+ID INT PRIMARY KEY,
+ID_png INT FOREIGN KEY,
+ID_quete INT FOREIGN KEY,
+);

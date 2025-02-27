@@ -7,6 +7,7 @@
 
 #define LOG_SQLITE3_ERROR(db) knob_log(KNOB_ERROR, "%s:%d: SQLITE3 ERROR: %s\n", __FILE__, __LINE__, sqlite3_errmsg(db))
 
+
 void see_state_fruits(sqlite3* db,char* state_name){
     sqlite3_stmt* stmt = NULL;
     char content[] =
@@ -79,6 +80,7 @@ void add_random_fruit(sqlite3* db){
 }
 
 void raylib_start(void){
+    printf("hi");
     srand(time(NULL));
     sqlite3* db = NULL;
     sqlite3_open("./fruits.db",&db);
