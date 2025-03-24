@@ -17,6 +17,8 @@ void raylib_start(void){
 
     //Début du code.
     //afficher_tous_lieux(db);
-    CreerJoueur(db, "Chadi", 100, 50);
+    CreerJoueur(db, "William", 100, 25);
+    CreerJoueur(db, "SpookyChadi", 100, 25);
+    CreerJoueur(db, "FreakyGabby", 100, 25);
     return;
 }
