@@ -79,15 +79,40 @@ void add_random_fruit(sqlite3* db){
     }
 }
 
+void afficher_tous_lieux(sqlite3* db) {
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT ID, Nom, Description FROM Lieux;";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        return;
+    }
+    
+    printf("\n=== LISTE DES LIEUX DISPONIBLES ===\n");
+    int lieux_trouves = 0;
+    
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        int id = sqlite3_column_int(stmt, 0);
+        const char* nom = (const char*)sqlite3_column_text(stmt, 1);
+        const char* description = (const char*)sqlite3_column_text(stmt, 2);
+        
+        printf("Lieu #%d : %s\n", id, nom);
+        printf("  %s\n\n", description);
+        lieux_trouves = 1;
+    }
+    
+    if (!lieux_trouves) {
+        printf("Aucun lieu trouvé dans la base de données.\n");
+    }
+    
+    sqlite3_finalize(stmt);
+}
+
 void raylib_start(void){
-    printf("hi");
     srand(time(NULL));
     sqlite3* db = NULL;
-    sqlite3_open("./fruits.db",&db);
-    see_state_fruits(db,"FL");
-    see_state_fruits(db,"CA");
-    see_state_fruits(db,"NC");
-    // add_random_fruit(db); //Uncomment to add a random fruit...
+    sqlite3_open("./aventure_quete.db",&db);
+    afficher_tous_lieux(db);
     sqlite3_close(db);
     return;
 }

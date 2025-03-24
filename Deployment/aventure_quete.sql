@@ -1,58 +1,77 @@
+DROP TABLE IF EXISTS Png_quetes;
+DROP TABLE IF EXISTS Quetes;
+DROP TABLE IF EXISTS Inventaire;
+DROP TABLE IF EXISTS Ennemis;
+DROP TABLE IF EXISTS Png;
+DROP TABLE IF EXISTS Joueurs;
+DROP TABLE IF EXISTS Objets;
+DROP TABLE IF EXISTS Lieux;
+
 CREATE TABLE Lieux(
-ID INT PRIMARY KEY,
-Nom TEXT,
-Description TEXT,
+    ID INT PRIMARY KEY,
+    Nom TEXT,
+    Description TEXT
 );
 
 CREATE TABLE Objets(
-ID INT PRIMARY KEY,
-Nom TEXT,
-Description TEXT,
-ID_lieu INT FOREIGN KEY,
+    ID INT PRIMARY KEY,
+    Nom TEXT,
+    Description TEXT,
+    ID_lieu INT,
+    FOREIGN KEY(ID_lieu) REFERENCES Lieux(ID)
 );
 
 CREATE TABLE Joueurs(
-ID INT PRIMARY KEY,
-Nom TEXT,
-Vie INT,
-Force INT,
-Position_ID INT FOREIGN KEY,
+    ID INT PRIMARY KEY,
+    Nom TEXT,
+    Vie INT,
+    Force INT,
+    Position_ID INT,
+    FOREIGN KEY(Position_ID) REFERENCES Lieux(ID)
 );
 
 CREATE TABLE Png(
-ID INT PRIMARY KEY,
-Nom TEXT,
-Description TEXT,
-ID_lieu INT FOREIGN KEY,
-Dialogue TEXT,
+    ID INT PRIMARY KEY,
+    Nom TEXT,
+    Description TEXT,
+    ID_lieu INT,
+    Dialogue TEXT,
+    FOREIGN KEY(ID_lieu) REFERENCES Lieux(ID)
 );
 
 CREATE TABLE Ennemis(
-ID INT PRIMARY KEY,
-Nom TEXT,
-Vie INT,
-Force INT,
-ID_lieu INT FOREIGN KEY;
+    ID INT PRIMARY KEY,
+    Nom TEXT,
+    Vie INT,
+    Force INT,
+    ID_lieu INT,
+    FOREIGN KEY(ID_lieu) REFERENCES Lieux(ID)
 );
 
 CREATE TABLE Inventaire(
-ID INT PRIMARY KEY,
-ID_joueur INT FOREIGN KEY,
-ID_objet INT FOREIGN KEY,
+    ID INT PRIMARY KEY,
+    ID_joueur INT,
+    ID_objet INT,
+    FOREIGN KEY(ID_joueur) REFERENCES Joueurs(ID),
+    FOREIGN KEY(ID_objet) REFERENCES Objets(ID)
 );
 
 CREATE TABLE Quetes(
-ID INT PRIMARY KEY,
-Description TEXT,
-IsComplete BOOLEAN,
-ID_joueur INT FOREIGN KEY,
-ID_png INT FOREIGN KEY,
+    ID INT PRIMARY KEY,
+    Description TEXT,
+    IsComplete BOOLEAN,
+    ID_joueur INT,
+    ID_png INT,
+    FOREIGN KEY(ID_joueur) REFERENCES Joueurs(ID),
+    FOREIGN KEY(ID_png) REFERENCES Png(ID)
 );
 
 CREATE TABLE Png_quetes(
-ID INT PRIMARY KEY,
-ID_png INT FOREIGN KEY,
-ID_quete INT FOREIGN KEY,
+    ID INT PRIMARY KEY,
+    ID_png INT,
+    ID_quete INT,
+    FOREIGN KEY(ID_png) REFERENCES Png(ID),
+    FOREIGN KEY(ID_quete) REFERENCES Quetes(ID)
 );
 
 INSERT INTO Lieux(ID, Nom, Description)
@@ -73,7 +92,7 @@ VALUES
 
 INSERT INTO Ennemis(ID, Nom, Vie, Force, ID_lieu)
 VALUES 
-(1, "Diddy", "He deals ALOT of damage. Run away while you can. Do NOT fight him.", 1),
-(2, "Drake", "He wont attack you if you are a child. However, if you are over 18, he will try to kick you out or kill you. Make sure you are strong enough.", 2),
-(3, "Zombie", "This zombie is a normal entity. Do not get bitten or you will have to cure it with baby oil.", 5),
-(4, "Deformed glue monster", "Located in Chadi's shack, this monster will try to submerge you in glue. However, he is very slow.", 4);
+(1, "Diddy", 100, 50, 1),
+(2, "Drake", 80, 40, 2),
+(3, "Zombie", 60, 30, 5),
+(4, "Deformed glue monster", 120, 20, 4);
