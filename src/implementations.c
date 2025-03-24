@@ -78,12 +78,14 @@ void add_random_fruit(sqlite3* db){
     }
 }
 
-void afficher_tous_lieux(sqlite3* db) {
+//LIEUX
+void AfficherLesLieux(sqlite3* db) {
     sqlite3_stmt* stmt = NULL;
     const char* query = "SELECT ID, Nom, Description FROM Lieux;";
     
     if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
         LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
         return;
     }
     
@@ -106,18 +108,19 @@ void afficher_tous_lieux(sqlite3* db) {
     
     sqlite3_finalize(stmt);
 }
-
 int TrouverLieuIDParNom(sqlite3* db, const char* Nom_Lieu) {
     sqlite3_stmt* stmt = NULL;
     const char* query = "SELECT ID FROM Lieux WHERE Nom = ?;";
     int ID = -1;
 
     if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
         sqlite3_finalize(stmt);
         return -1;
     }
 
     if (sqlite3_bind_text(stmt, 1, Nom_Lieu, -1, SQLITE_STATIC) != SQLITE_OK) {
+         LOG_SQLITE3_ERROR(db);
         sqlite3_finalize(stmt);
         return -1;
     }
@@ -133,4 +136,114 @@ int TrouverLieuIDParNom(sqlite3* db, const char* Nom_Lieu) {
 
     return ID;
 
+}
+void AfficherLieu(sqlite3* db, int ID) {
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT Nom, Description FROM Lieux WHERE ID = ?";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return;
+    }
+
+    sqlite3_bind_int(stmt, 1, ID);
+
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        printf("----------\nLieux: %s\nDescription: %s\n----------\n", sqlite3_column_text(stmt, 0), sqlite3_column_text(stmt, 1));
+    } else {
+        printf("Aucun lieux trouvé.\n");
+    }
+    sqlite3_finalize(stmt);
+}
+void AfficherObjetsLieux(sqlite3* db, int ID) {
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT Nom, Description FROM Objets WHERE ID_lieu = ?";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return;
+    }  
+
+    if (sqlite3_bind_int(stmt, 1, ID) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return;
+    }
+
+    while (sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        printf("----------\nObjet: %s\nDescription: %s\n----------\n", sqlite3_column_text(stmt, 0), sqlite3_column_text(stmt, 1));
+    }
+    
+    sqlite3_finalize(stmt);
+}
+void AfficherEnnemisLieux(sqlite3* db, int ID) {
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT Nom, Vie, Force FROM Ennemis WHERE ID_lieu = ?";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return;
+    }  
+
+    if (sqlite3_bind_int(stmt, 1, ID) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return;
+    }
+
+    while (sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        printf("----------\nNom: %s\nVie: %d\nForce: %d\n----------\n", sqlite3_column_text(stmt, 0), sqlite3_column_int(stmt, 1), sqlite3_column_int(stmt, 2));
+    }
+    
+    sqlite3_finalize(stmt);
+}
+
+//JOUEUR
+int CreerJoueur(sqlite3* db, char* Nom, int Vie, int Force) {
+    if (sqlite3_exec(db, "BEGIN;", NULL, NULL, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        return -1;
+    }
+    
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "INSERT INTO Joueurs(Nom, Vie, Force, Position_ID) VALUES (?, ?, ?, 1)";
+
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+        return -1;
+    }
+
+    if (sqlite3_bind_text(stmt, 1, Nom, -1, SQLITE_STATIC) != SQLITE_OK ||
+        sqlite3_bind_int(stmt, 2, Vie) != SQLITE_OK ||
+        sqlite3_bind_int(stmt, 3, Force) != SQLITE_OK) {
+        
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+        return -1;
+    }
+
+    if (sqlite3_step(stmt) != SQLITE_DONE) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+        return -1;
+    }
+
+    int nouveau_joueur_id = sqlite3_last_insert_rowid(db);
+
+    sqlite3_finalize(stmt);
+
+    if (sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        return -1;
+    }
+
+    return nouveau_joueur_id;
 }

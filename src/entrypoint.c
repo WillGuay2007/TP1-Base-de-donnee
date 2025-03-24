@@ -16,8 +16,7 @@ void raylib_start(void){
     sqlite3_open("./aventure_quete.db",&db);
 
     //Début du code.
-    afficher_tous_lieux(db);
-    printf("ID: %d", TrouverLieuIDParNom(db, "Chadi's shack"));
-    sqlite3_close(db);
+    //afficher_tous_lieux(db);
+    CreerJoueur(db, "Chadi", 100, 50);
     return;
 }

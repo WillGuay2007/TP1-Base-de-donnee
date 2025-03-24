@@ -11,5 +11,13 @@
 
 void see_state_fruits(sqlite3* db,char* state_name);
 void add_random_fruit(sqlite3* db);
-void afficher_tous_lieux(sqlite3* db);
+
+//LIEUX
+void AfficherLesLieux(sqlite3* db);
+void AfficherLieu(sqlite3* db, int ID);
 int TrouverLieuIDParNom(sqlite3* db, const char* Nom_Lieu);
+void AfficherObjetsLieux(sqlite3* db, int ID);
+void AfficherEnnemisLieux(sqlite3* db, int ID);
+
+//Joueur
+int CreerJoueur(sqlite3* db, char* Nom, int Vie, int Force);
