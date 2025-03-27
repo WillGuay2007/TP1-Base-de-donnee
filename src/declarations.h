@@ -18,3 +18,4 @@ void AfficherEnnemisLieux(sqlite3* db, int ID);
 
 //Joueur
 int CreerJoueur(sqlite3* db, char* Nom, int Vie, int Force);
+void AfficherJoueurs(sqlite3* db);

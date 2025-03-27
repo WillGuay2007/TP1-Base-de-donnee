@@ -16,9 +16,7 @@ void raylib_start(void){
     sqlite3_open("./aventure_quete.db",&db);
 
     //Début du code.
-    //afficher_tous_lieux(db);
-    CreerJoueur(db, "William", 100, 25);
-    CreerJoueur(db, "SpookyChadi", 100, 25);
-    CreerJoueur(db, "FreakyGabby", 100, 25);
+    //CreerJoueur(db, "Spooky ahh Chadi", 69, 69);
+    AfficherJoueurs(db);
     return;
 }

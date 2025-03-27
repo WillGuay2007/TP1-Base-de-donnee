@@ -177,3 +177,26 @@ int CreerJoueur(sqlite3* db, char* Nom, int Vie, int Force) {
 
     return nouveau_joueur_id;
 }
+void AfficherJoueurs(sqlite3* db) {
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT ID, Nom, Vie, Force, Position_ID FROM Joueurs;";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return;
+    }  
+
+    while (sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        int JoueurID = sqlite3_column_int(stmt, 0);
+        const unsigned char* Nom = (const unsigned char*)sqlite3_column_text(stmt, 1);
+        int Vie = sqlite3_column_int(stmt, 2);
+        int Force = sqlite3_column_int(stmt, 3);
+        int PositionID = sqlite3_column_int(stmt, 4);
+        printf("Joueur #%d\n----------\nNom: %s\nVie: %d\nForce: %d\nPosition_ID: %d\n----------\n", JoueurID, Nom, Vie, Force, PositionID);
+    }
+
+    sqlite3_finalize(stmt);
+    
+}
