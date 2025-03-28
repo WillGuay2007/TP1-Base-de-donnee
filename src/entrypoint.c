@@ -16,8 +16,6 @@ void raylib_start(void){
     sqlite3_open("./aventure_quete.db",&db);
 
     //Début du code.
-    //CreerJoueur(db, "Spooky ahh Chadi", 69, 69);
-    printf("e");
     int ID = PromptPlayerChoice(db);
     return;
 }

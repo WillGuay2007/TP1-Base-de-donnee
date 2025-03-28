@@ -23,3 +23,4 @@ int ObtenirPositionJoueur(sqlite3* db, int id_joueur);
 void AfficherPositionJoueur(sqlite3* db, int ID);
 int GetPlayerCount(sqlite3* db);
 int PromptPlayerChoice(sqlite3* db);
+void AfficherJoueurParID(sqlite3* db, int ID);

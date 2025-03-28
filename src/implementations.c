@@ -241,7 +241,6 @@ int GetPlayerCount(sqlite3* db) {
 
     return PlrCount;
 }
-
 int PromptPlayerChoice(sqlite3* db) {
     printf("Voulez vous choisir un joueur existant ou bien en creer un?\n1 = choisir\n2 = creer\n");
     int Choix = -1;
@@ -249,9 +248,13 @@ int PromptPlayerChoice(sqlite3* db) {
     if (Choix < 2) {
         printf("Vous avec choisi de prendre un personnage deja existant.\nVeuillez entrer un ID valide.\n");
         int id = -1;
+        AfficherJoueurs(db);
+        printf("Vos choixs sont juste en haut...\n");
         while (id < 0 || id > GetPlayerCount(db)) {
             scanf("%d", &id);
         }
+        printf("\033[0;32mVos informations:\033[0;0m\n");
+        AfficherJoueurParID(db, id);
         return id;
     } else {
         printf("Vous avez choisi de creer un joueur.\nVeuillez entrer les stats\n");
@@ -268,4 +271,18 @@ int PromptPlayerChoice(sqlite3* db) {
         int id = CreerJoueur(db, nom, vie, force);
         return id;
     }
+}
+void AfficherJoueurParID(sqlite3* db, int ID) {
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT ID, Nom, Vie, Force, Position_ID FROM Joueurs WHERE ID = ?;";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return;
+    }
+
+    sqlite3_bind_int(stmt, 1, ID);
+    sqlite3_step(stmt);
+    printf("Joueur:\n----------\nID = %d\nNom: %s\nVie: %d\nForce: %d\nPosition: %d\n", sqlite3_column_int(stmt, 0), sqlite3_column_text(stmt, 1), sqlite3_column_int(stmt, 2), sqlite3_column_int(stmt, 3), sqlite3_column_int(stmt, 4));
 }

@@ -12,6 +12,7 @@
         "args": [],
         "stopAtEntry": false,
         "cwd": "${workspaceRoot}/Deployment",
+        "console": "externalTerminal",
         "preLaunchTask": "Build game"
       },
       {
