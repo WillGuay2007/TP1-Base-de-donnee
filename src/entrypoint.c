@@ -17,6 +17,7 @@ void raylib_start(void){
 
     //Début du code.
     //CreerJoueur(db, "Spooky ahh Chadi", 69, 69);
-    AfficherJoueurs(db);
+    printf("e");
+    int ID = PromptPlayerChoice(db);
     return;
 }

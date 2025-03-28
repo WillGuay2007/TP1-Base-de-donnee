@@ -19,3 +19,7 @@ void AfficherEnnemisLieux(sqlite3* db, int ID);
 //Joueur
 int CreerJoueur(sqlite3* db, char* Nom, int Vie, int Force);
 void AfficherJoueurs(sqlite3* db);
+int ObtenirPositionJoueur(sqlite3* db, int id_joueur);
+void AfficherPositionJoueur(sqlite3* db, int ID);
+int GetPlayerCount(sqlite3* db);
+int PromptPlayerChoice(sqlite3* db);

@@ -200,3 +200,72 @@ void AfficherJoueurs(sqlite3* db) {
     sqlite3_finalize(stmt);
     
 }
+int ObtenirPositionJoueur(sqlite3* db, int id_joueur) {
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT ID, Nom, Vie, Force, Position_ID FROM Joueurs;";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return -1;
+    }  
+
+    sqlite3_step(stmt);
+    int Position = sqlite3_column_int(stmt, 0);
+    sqlite3_finalize(stmt);
+    return Position;
+}
+void AfficherPositionJoueur(sqlite3* db, int ID) {
+    printf("Le joueur #%d est a la position:\n");
+    AfficherLieu(db, ObtenirPositionJoueur(db, ID));
+}
+int GetPlayerCount(sqlite3* db) {
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT COUNT(ID) AS PlayerCount FROM Joueurs;";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return -1;
+    }
+
+    if (sqlite3_step(stmt) != SQLITE_ROW) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return -1;
+    }
+
+    int PlrCount = sqlite3_column_int(stmt, 0);
+    
+    sqlite3_finalize(stmt);
+
+    return PlrCount;
+}
+
+int PromptPlayerChoice(sqlite3* db) {
+    printf("Voulez vous choisir un joueur existant ou bien en creer un?\n1 = choisir\n2 = creer\n");
+    int Choix = -1;
+    scanf("%d", &Choix);
+    if (Choix < 2) {
+        printf("Vous avec choisi de prendre un personnage deja existant.\nVeuillez entrer un ID valide.\n");
+        int id = -1;
+        while (id < 0 || id > GetPlayerCount(db)) {
+            scanf("%d", &id);
+        }
+        return id;
+    } else {
+        printf("Vous avez choisi de creer un joueur.\nVeuillez entrer les stats\n");
+        char nom[100];
+        int vie;
+        int force;
+        printf("Veuillez entrer votre nouveau username\n");
+        scanf("%s", nom);
+        printf("Veuillez entrer votre vie\n");
+        scanf("%d", &vie);
+        printf("Veuillez entrer votre force\n");
+        scanf("%d", &force);
+        printf("Votre personnage est pret a l'initialisation...\n");
+        int id = CreerJoueur(db, nom, vie, force);
+        return id;
+    }
+}
