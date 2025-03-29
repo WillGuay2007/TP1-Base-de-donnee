@@ -18,7 +18,6 @@ CREATE TABLE Objets(
     Nom TEXT,
     Description TEXT,
     ID_lieu INT,
-    Quantite INT DEFAULT 1,
     FOREIGN KEY(ID_lieu) REFERENCES Lieux(ID)
 );
 
@@ -83,13 +82,13 @@ VALUES
  (4, "Chadi's shack", "Many people belive that this shack contains very odd objects, like the head tickler 2500");
 
 
-INSERT INTO Objets(ID, Nom, Description, ID_lieu, Quantite)
+INSERT INTO Objets(ID, Nom, Description, ID_lieu)
 VALUES
-(1, "Baby oil", "A very slippery substance that can stun ennemies by making them slip", 1, 0),
-(2, "Explosive fried gedagedigedagedago chicken nugget", "This friend chick nugget is very EXPLOSIVE! It deals alot of damage to ennemies", 3, 0),
-(3, "Head tickler 2500", "With this spooky ahh object, you can tickle the head of your ennemies. They will lose health by laughing too much.", 4, 0),
+(1, "Baby oil", "A very slippery substance that can stun ennemies by making them slip", 1),
+(2, "Explosive fried gedagedigedagedago chicken nugget", "This friend chick nugget is very EXPLOSIVE! It deals alot of damage to ennemies", 3),
+(3, "Head tickler 2500", "With this spooky ahh object, you can tickle the head of your ennemies. They will lose health by laughing too much.", 4),
 (4, "Drake's slipper", "This object deals a small amount of damage but attacks extremly fast.", 2, 0),
-(5, "Chadi's transportable bed", "You can only use this bed once. With this, you can become immune for 1 turn by sleeping. It will heal 20% of your health.", 4, 0);
+(5, "Chadi's transportable bed", "You can only use this bed once. With this, you can become immune for 1 turn by sleeping. It will heal 20% of your health.", 4);
 
 INSERT INTO Ennemis(ID, Nom, Vie, Force, ID_lieu)
 VALUES 
