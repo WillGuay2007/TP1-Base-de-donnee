@@ -53,7 +53,6 @@ CREATE TABLE Inventaire(
     ID INT PRIMARY KEY,
     ID_joueur INT,
     ID_objet INT,
-    Quantite INT DEFAULT 0,
     FOREIGN KEY(ID_joueur) REFERENCES Joueurs(ID),
     FOREIGN KEY(ID_objet) REFERENCES Objets(ID)
 );

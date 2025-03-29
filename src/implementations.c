@@ -382,6 +382,6 @@ int RamasserObjet(sqlite3* db, int id_joueur, int id_objet) {
         return 0;
     }
     
-    printf("Vous avez ramassé l'objet avec succès! Il reste disponible dans ce lieu.\n");
+    printf("Vous avez ramasse l'objet avec succes!\n");
     return 1;
 }
