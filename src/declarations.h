@@ -9,7 +9,7 @@
 
 #define LOG_SQLITE3_ERROR(db) knob_log(KNOB_ERROR, "%s:%d: SQLITE3 ERROR: %s\n", __FILE__, __LINE__, sqlite3_errmsg(db))
 
-//LIEUX
+//Lieux
 void AfficherLesLieux(sqlite3* db);
 void AfficherLieu(sqlite3* db, int ID);
 int TrouverLieuIDParNom(sqlite3* db, const char* Nom_Lieu);
@@ -24,3 +24,7 @@ void AfficherPositionJoueur(sqlite3* db, int ID);
 int GetPlayerCount(sqlite3* db);
 int PromptPlayerChoice(sqlite3* db);
 void AfficherJoueurParID(sqlite3* db, int ID);
+int DeplacerJoueur(sqlite3* db, int id_joueur, int id_lieu_destination);
+
+//Objet
+int RamasserObjet(sqlite3* db, int id_joueur, int id_objet);
