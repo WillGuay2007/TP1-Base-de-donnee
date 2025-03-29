@@ -28,3 +28,10 @@ int DeplacerJoueur(sqlite3* db, int id_joueur, int id_lieu_destination);
 
 //Objet
 int RamasserObjet(sqlite3* db, int id_joueur, int id_objet);
+int ObtenirQuantiteObjet(sqlite3* db, int id_joueur, int id_objet);
+
+//Inventaire
+void AfficherInventaire(sqlite3* db, int id_joueur);
+
+//Ennemis
+void AttaquerEnnemis(sqlite3* db, int id_joueur, int id_ennemi);

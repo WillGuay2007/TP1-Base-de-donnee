@@ -17,9 +17,10 @@ void raylib_start(void){
 
     //Début du code.
     int ID = PromptPlayerChoice(db);
-    DeplacerJoueur(db, ID, 2);
+    DeplacerJoueur(db, ID, 4);
     AfficherLieu(db, ObtenirPositionJoueur(db, ID));
-    RamasserObjet(db, ID, 4);
-
+    RamasserObjet(db, ID, 3);
+    printf("%d\n", ObtenirQuantiteObjet(db, ID, 3));
+    AfficherInventaire(db, ID);
     return;
 }

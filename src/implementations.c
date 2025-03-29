@@ -299,20 +299,20 @@ int DeplacerJoueur(sqlite3* db, int id_joueur, int id_lieu_destination) {
     if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
         LOG_SQLITE3_ERROR(db);
         sqlite3_finalize(stmt);
-        return -1;
+        return 0;
     }  
     sqlite3_bind_int(stmt, 1, id_lieu_destination);
     if (sqlite3_step(stmt) != SQLITE_ROW)  {
         LOG_SQLITE3_ERROR(db);
         sqlite3_finalize(stmt);
-        return -1;
+        return 0;
     } // Ca verifie si c'est un lieu valide, si ca l'est pas, ca quitte la fonction
     stmt = NULL;
     query = "UPDATE Joueurs SET Position_ID = ? WHERE ID = ?;";
     if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
         LOG_SQLITE3_ERROR(db);
         sqlite3_finalize(stmt);
-        return -1;
+        return 0;
     }  
     sqlite3_bind_int(stmt, 1, id_lieu_destination);
     sqlite3_bind_int(stmt, 2, id_joueur);
@@ -320,7 +320,7 @@ int DeplacerJoueur(sqlite3* db, int id_joueur, int id_lieu_destination) {
     if (sqlite3_step(stmt) != SQLITE_DONE) {
         LOG_SQLITE3_ERROR(db);
         sqlite3_finalize(stmt);
-        return -1;
+        return 0;
     }
 
     sqlite3_finalize(stmt);
@@ -343,7 +343,7 @@ int RamasserObjet(sqlite3* db, int id_joueur, int id_objet) {
     sqlite3_bind_int(stmt, 2, id_joueur);
     
     if (sqlite3_step(stmt) != SQLITE_ROW) {
-        printf("Cet objet n'est pas disponible ici ou n'existe pas.\n");
+        printf("\033[0;31mCet objet n'est pas disponible ici ou n'existe pas.\033[0m\n");
         sqlite3_finalize(stmt);
         return 0;
     }
@@ -384,4 +384,49 @@ int RamasserObjet(sqlite3* db, int id_joueur, int id_objet) {
     
     printf("Vous avez ramasse l'objet avec succes!\n");
     return 1;
+}
+int ObtenirQuantiteObjet(sqlite3* db, int id_joueur, int id_objet) {
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT COUNT(ID_objet) AS Quantite FROM Inventaire WHERE ID_objet = ? AND ID_joueur = ? GROUP BY ID_objet";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return 0;
+    } 
+
+    sqlite3_bind_int(stmt, 1, id_objet);
+    sqlite3_bind_int(stmt, 2, id_joueur);
+
+    sqlite3_step(stmt);
+
+    return sqlite3_column_int(stmt, 0);
+
+}
+
+//Inventaire
+void AfficherInventaire(sqlite3* db, int id_joueur) {
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT o.ID, o.Nom, COUNT(o.ID) AS Quantite FROM Inventaire i JOIN Objets o ON o.ID = i.ID_objet WHERE i.ID_joueur = ? GROUP BY o.id";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return;
+    }
+
+    sqlite3_bind_int(stmt, 1, id_joueur);
+
+    printf("\033[0;32mInventaire de joueur #%d:\033[0m\n----------\n", id_joueur);
+
+    while (sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        int ID = sqlite3_column_int(stmt, 0);
+        const unsigned char* Nom = sqlite3_column_text(stmt, 1);
+        int Count = sqlite3_column_int(stmt, 2);
+        printf("ID: %d\nNom: %s\nQuantite: %d\n----------\n", ID, Nom, Count);
+    }
+    
+    sqlite3_finalize(stmt);
+    return;
 }
