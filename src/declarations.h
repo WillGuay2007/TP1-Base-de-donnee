@@ -40,5 +40,6 @@ void AfficherInventaire(sqlite3* db, int id_joueur);
 void AttaquerEnnemis(sqlite3* db, int id_joueur, int id_ennemi);
 
 //Deplacement joueur
-void Menu_Deplacement(sqlite3* db, int id_joueur, int id_lieu);
-void Avancer(sqlite3* db, int id_joueur, int id_lieu);
+void Menu_Deplacement(sqlite3* db, int id_joueur);
+void Avancer(sqlite3* db, int id_joueur);
+void ChangerDeLieu(sqlite3* db, int id_joueur);

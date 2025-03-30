@@ -511,17 +511,19 @@ void AttaquerEnnemis(sqlite3* db, int id_joueur, int id_ennemi) {
 }
 
 //Deplacement joueur
-void Menu_Deplacement(sqlite3* db, int id_joueur, int id_lieu) {
+void Menu_Deplacement(sqlite3* db, int id_joueur) {
     int choix;
     printf("\033[0;33mVoulez vous avancer ou bien changer de lieu?\nAvancer = 1\nChanger de lieu = 2\033[0m\n");
     scanf("%d", &choix);
     if (choix < 2) {
-        Avancer(db, id_joueur, id_lieu);
+        Avancer(db, id_joueur);
     } else {
-        //Changer de lieu
+        ChangerDeLieu(db, id_joueur);
     }
+
+    Menu_Deplacement(db, id_joueur);
 }
-void Avancer(sqlite3* db, int id_joueur, int id_lieu) {
+void Avancer(sqlite3* db, int id_joueur) {
     //Pour pas que ca soit trop complex j'ai fait un systeme de deplacement quand meme simple.
     //Le joueur peut avancer. il va soit tomber sur rien, un objet random ou bien un ennemi random. ca continue a l'infini.
     int RandomEvent = rand() % 3 + 1; // 1 = Rien, 2 = Ennemi, 3 = Objet
@@ -529,13 +531,24 @@ void Avancer(sqlite3* db, int id_joueur, int id_lieu) {
     if (RandomEvent == 1) {
         printf("Vous ne trouvez rien.\n");
     } else if (RandomEvent == 2) {
-        printf("Vous etes tombe sur un ennemi:\n");
-    } else {
-        printf("\033[0;32mVous avez trouve un objet:\033[0m\n");
-        int ObjetID = LieuTrouverObjetAleatoire(db, id_lieu);
+        printf("\033[4;32mVous etes tombe sur un ennemi:\033[0m\n");
+        // Afficher l'ennemi
+        printf("Voulez vous fuir ou bien le combattre?\n1: Fuire\n2: Combattre\n");
         int choix = 0;
+        scanf("%d", &choix);
+        if (choix < 2) {
+            printf("\033[0;31mVous avez choisi de fuire...\n\033[0m");
+        } else {
+            printf("\033[0;32mVous vous appretez a combattre l'ennemi!\n\033[0m");
+            //Systeme de combat
+        }
+
+    } else {
+        printf("\033[4;32mVous avez trouve un objet:\033[0m\n");
+        int ObjetID = LieuTrouverObjetAleatoire(db, ObtenirPositionJoueur(db, id_joueur));
         AfficherInfoObjet(db, ObjetID);
         printf("Voulez vous le ramasser ou bien le laisser ici?\n1 = Ramasser\n2 = Laisser ici\n");
+        int choix = 0;
         scanf("%d", &choix);
         if (choix < 2) {
             RamasserObjet(db, id_joueur, ObjetID);
@@ -543,6 +556,10 @@ void Avancer(sqlite3* db, int id_joueur, int id_lieu) {
             printf("\033[0;31mVous avez choisi d'ignorer l'objet.\033[0m\n");
         }
     }
-
-    Menu_Deplacement(db, id_joueur, id_lieu); 
+}
+void ChangerDeLieu(sqlite3* db, int id_joueur) {
+    printf("Vous avez choisi de changer de lieu. Veuillez entrer votre choix:\n");
+    int Choix = 0;
+    scanf("%d", &Choix);
+    if (DeplacerJoueur(db, id_joueur, Choix) == 1) AfficherLieu(db, Choix);
 }
