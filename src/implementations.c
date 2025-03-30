@@ -130,6 +130,60 @@ void AfficherEnnemisLieux(sqlite3* db, int ID) {
     
     sqlite3_finalize(stmt);
 }
+int ObtenirQuantiteObjetsLieu(sqlite3* db, int id_lieu) {
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT COUNT(*) FROM Lieux l JOIN Objets o ON o.ID_lieu = l.ID WHERE l.ID = ?";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return 0;
+    }  
+
+    sqlite3_bind_int(stmt, 1, id_lieu);
+
+    if (sqlite3_step(stmt) != SQLITE_ROW) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return 0;
+    }
+
+    int quantite = sqlite3_column_int(stmt, 0);
+    sqlite3_finalize(stmt);
+
+    return quantite;
+
+}
+int LieuTrouverObjetAleatoire(sqlite3* db, int id_lieu) {
+    int ObjectCount = ObtenirQuantiteObjetsLieu(db, id_lieu);
+    if (ObjectCount < 1) return 0;
+    int Offset = rand() % ObjectCount; // Pour choisir une rangee aleatoire
+
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT ID FROM Objets WHERE ID_lieu = ? LIMIT 1 OFFSET ?";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return 0;
+    }  
+
+    sqlite3_bind_int(stmt, 1, id_lieu);
+    sqlite3_bind_int(stmt, 2, Offset);
+
+    if (sqlite3_step(stmt) != SQLITE_ROW) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return 0;
+    }
+    
+    int ChoixItemID = sqlite3_column_int(stmt, 0);
+
+    sqlite3_finalize(stmt);
+
+    return ChoixItemID;
+    
+}
 
 //Joueur
 int CreerJoueur(sqlite3* db, char* Nom, int Vie, int Force) {
@@ -382,10 +436,10 @@ int RamasserObjet(sqlite3* db, int id_joueur, int id_objet) {
         return 0;
     }
     
-    printf("Vous avez ramasse l'objet avec succes!\n");
+    printf("\033[0;32mVous avez ramasse l'objet avec id: %d avec succes!\033[0m\n", id_objet);
     return 1;
 }
-int ObtenirQuantiteObjet(sqlite3* db, int id_joueur, int id_objet) {
+int ObtenirQuantiteObjetInventaire(sqlite3* db, int id_joueur, int id_objet) {
     sqlite3_stmt* stmt = NULL;
     const char* query = "SELECT COUNT(ID_objet) AS Quantite FROM Inventaire WHERE ID_objet = ? AND ID_joueur = ? GROUP BY ID_objet";
     
@@ -402,6 +456,26 @@ int ObtenirQuantiteObjet(sqlite3* db, int id_joueur, int id_objet) {
 
     return sqlite3_column_int(stmt, 0);
 
+}
+void AfficherInfoObjet(sqlite3* db, int id_objet) {
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT Nom, Description FROM Objets WHERE ID = ?";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return;
+    } 
+
+    sqlite3_bind_int(stmt, 1, id_objet);
+
+    sqlite3_step(stmt);
+    unsigned const char* Nom = sqlite3_column_text(stmt, 0);
+    unsigned const char* Description = sqlite3_column_text(stmt, 1);
+
+    printf("Informations de l'objet avec l'ID %d:\n----------\nNom: %s\nDescription: %s\n----------\n", id_objet, Nom, Description);
+    sqlite3_finalize(stmt);
+    return;
 }
 
 //Inventaire
@@ -429,4 +503,46 @@ void AfficherInventaire(sqlite3* db, int id_joueur) {
     
     sqlite3_finalize(stmt);
     return;
+}
+
+//Ennemis
+void AttaquerEnnemis(sqlite3* db, int id_joueur, int id_ennemi) {
+
+}
+
+//Deplacement joueur
+void Menu_Deplacement(sqlite3* db, int id_joueur, int id_lieu) {
+    int choix;
+    printf("\033[0;33mVoulez vous avancer ou bien changer de lieu?\nAvancer = 1\nChanger de lieu = 2\033[0m\n");
+    scanf("%d", &choix);
+    if (choix < 2) {
+        Avancer(db, id_joueur, id_lieu);
+    } else {
+        //Changer de lieu
+    }
+}
+void Avancer(sqlite3* db, int id_joueur, int id_lieu) {
+    //Pour pas que ca soit trop complex j'ai fait un systeme de deplacement quand meme simple.
+    //Le joueur peut avancer. il va soit tomber sur rien, un objet random ou bien un ennemi random. ca continue a l'infini.
+    int RandomEvent = rand() % 3 + 1; // 1 = Rien, 2 = Ennemi, 3 = Objet
+
+    if (RandomEvent == 1) {
+        printf("Vous ne trouvez rien.\n");
+    } else if (RandomEvent == 2) {
+        printf("Vous etes tombe sur un ennemi:\n");
+    } else {
+        printf("\033[0;32mVous avez trouve un objet:\033[0m\n");
+        int ObjetID = LieuTrouverObjetAleatoire(db, id_lieu);
+        int choix = 0;
+        AfficherInfoObjet(db, ObjetID);
+        printf("Voulez vous le ramasser ou bien le laisser ici?\n1 = Ramasser\n2 = Laisser ici\n");
+        scanf("%d", &choix);
+        if (choix < 2) {
+            RamasserObjet(db, id_joueur, ObjetID);
+        } else {
+            printf("\033[0;31mVous avez choisi d'ignorer l'objet.\033[0m\n");
+        }
+    }
+
+    Menu_Deplacement(db, id_joueur, id_lieu); 
 }

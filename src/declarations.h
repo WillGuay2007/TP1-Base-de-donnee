@@ -15,6 +15,8 @@ void AfficherLieu(sqlite3* db, int ID);
 int TrouverLieuIDParNom(sqlite3* db, const char* Nom_Lieu);
 void AfficherObjetsLieux(sqlite3* db, int ID);
 void AfficherEnnemisLieux(sqlite3* db, int ID);
+int ObtenirQuantiteObjetsLieu(sqlite3* db, int id_lieu);
+int LieuTrouverObjetAleatoire(sqlite3* db, int id_lieu);
 
 //Joueur
 int CreerJoueur(sqlite3* db, char* Nom, int Vie, int Force);
@@ -28,10 +30,15 @@ int DeplacerJoueur(sqlite3* db, int id_joueur, int id_lieu_destination);
 
 //Objet
 int RamasserObjet(sqlite3* db, int id_joueur, int id_objet);
-int ObtenirQuantiteObjet(sqlite3* db, int id_joueur, int id_objet);
+int ObtenirQuantiteObjetInventaire(sqlite3* db, int id_joueur, int id_objet);
+void AfficherInfoObjet(sqlite3* db, int id_objet);
 
 //Inventaire
 void AfficherInventaire(sqlite3* db, int id_joueur);
 
 //Ennemis
 void AttaquerEnnemis(sqlite3* db, int id_joueur, int id_ennemi);
+
+//Deplacement joueur
+void Menu_Deplacement(sqlite3* db, int id_joueur, int id_lieu);
+void Avancer(sqlite3* db, int id_joueur, int id_lieu);
