@@ -5,6 +5,7 @@
 
 #include <time.h>
 #include <stdlib.h>
+#include <string.h>
 
 //Lieux
 void AfficherLesLieux(sqlite3* db) {
@@ -132,7 +133,7 @@ void AfficherEnnemisLieux(sqlite3* db, int ID) {
 }
 int ObtenirQuantiteObjetsLieu(sqlite3* db, int id_lieu) {
     sqlite3_stmt* stmt = NULL;
-    const char* query = "SELECT COUNT(*) FROM Lieux l JOIN Objets o ON o.ID_lieu = l.ID WHERE l.ID = ?";
+    const char* query = "SELECT COUNT(*) FROM Objets WHERE ID_lieu= ?";
     
     if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
         LOG_SQLITE3_ERROR(db);
@@ -183,6 +184,58 @@ int LieuTrouverObjetAleatoire(sqlite3* db, int id_lieu) {
 
     return ChoixItemID;
     
+}
+int ObtenirQuantiteEnnemisLieu(sqlite3* db, int id_lieu) {
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT COUNT(*) FROM Ennemis WHERE ID_lieu = ?";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return 0;
+    }  
+
+    sqlite3_bind_int(stmt, 1, id_lieu);
+
+    if (sqlite3_step(stmt) != SQLITE_ROW) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return 0;
+    }
+
+    int quantite = sqlite3_column_int(stmt, 0);
+    sqlite3_finalize(stmt);
+
+    return quantite;
+}
+int LieuTrouverEnnemiAleatoire(sqlite3* db, int id_lieu) {
+    int EnnemiCount = ObtenirQuantiteEnnemisLieu(db, id_lieu);
+    if (EnnemiCount < 1) return 0;
+    int Offset = rand() % EnnemiCount; // Pour choisir une rangee aleatoire
+
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT ID FROM Ennemis WHERE ID_lieu = ? LIMIT 1 OFFSET ?";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return 0;
+    }  
+
+    sqlite3_bind_int(stmt, 1, id_lieu);
+    sqlite3_bind_int(stmt, 2, Offset);
+
+    if (sqlite3_step(stmt) != SQLITE_ROW) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return 0;
+    }
+    
+    int ChoixEnnemiID = sqlite3_column_int(stmt, 0);
+
+    sqlite3_finalize(stmt);
+
+    return ChoixEnnemiID;
 }
 
 //Joueur
@@ -381,6 +434,40 @@ int DeplacerJoueur(sqlite3* db, int id_joueur, int id_lieu_destination) {
     printf("Le joueur #%d a ete deplace au lieux #%d avec succes\n", id_joueur, id_lieu_destination);
     return 1;
 }
+int ObtenirForceJoueur(sqlite3* db, int id_joueur) {
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT Force FROM Joueurs WHERE ID = ?";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return 0;
+    }  
+
+    sqlite3_bind_int(stmt, 1, id_joueur);
+    sqlite3_step(stmt);
+
+    int Force = sqlite3_column_int(stmt, 0);
+    sqlite3_finalize(stmt);
+    return Force;
+}
+int ObtenirVieJoueur(sqlite3* db, int id_joueur) {
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT Vie FROM Joueurs WHERE ID = ?";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return 0;
+    }  
+
+    sqlite3_bind_int(stmt, 1, id_joueur);
+    sqlite3_step(stmt);
+
+    int Vie = sqlite3_column_int(stmt, 0);
+    sqlite3_finalize(stmt);
+    return Vie;
+}
 
 //Objet
 int RamasserObjet(sqlite3* db, int id_joueur, int id_objet) {
@@ -459,7 +546,7 @@ int ObtenirQuantiteObjetInventaire(sqlite3* db, int id_joueur, int id_objet) {
 }
 void AfficherInfoObjet(sqlite3* db, int id_objet) {
     sqlite3_stmt* stmt = NULL;
-    const char* query = "SELECT Nom, Description FROM Objets WHERE ID = ?";
+    const char* query = "SELECT Nom, Description, ForAttack, ForHeal, AttackOrHealPercentage FROM Objets WHERE ID = ?";
     
     if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
         LOG_SQLITE3_ERROR(db);
@@ -472,10 +559,109 @@ void AfficherInfoObjet(sqlite3* db, int id_objet) {
     sqlite3_step(stmt);
     unsigned const char* Nom = sqlite3_column_text(stmt, 0);
     unsigned const char* Description = sqlite3_column_text(stmt, 1);
+    int CanAttack = sqlite3_column_int(stmt, 2);
+    int CanHeal = sqlite3_column_int(stmt, 3);
+    int Pourcentage = sqlite3_column_int(stmt, 4);
 
-    printf("Informations de l'objet avec l'ID %d:\n----------\nNom: %s\nDescription: %s\n----------\n", id_objet, Nom, Description);
+    printf("\033[1;4;32mInformations de l'objet avec l'ID %d:\033[0m\n----------\nNom: %s\nDescription: %s\nPeut attaquer = %d\nPeut heal = %d\nPourcentage d'attaque ou heal = %d\n----------\n", id_objet, Nom, Description, CanAttack, CanHeal, Pourcentage);
     sqlite3_finalize(stmt);
     return;
+}
+float ObtenirForceOuHealMultiplierObjet(sqlite3* db, int id_objet) {
+    float ForceOrHealMultiplier;
+    sqlite3_stmt* stmt = NULL;
+
+    const char* query = "SELECT AttackOrHealPercentage FROM Objets WHERE ID = ?";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return 0;
+    } 
+
+    sqlite3_bind_int(stmt, 1, id_objet);
+
+    sqlite3_step(stmt);
+
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        ForceOrHealMultiplier = 1.0f + (float)sqlite3_column_int(stmt, 0) / 100.0f;
+    }
+    sqlite3_finalize(stmt);
+    return ForceOrHealMultiplier;
+}
+void AfficherObjetsDeHealInventaire(sqlite3* db, int id_joueur) {
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT o.ID, COUNT(*) AS Quantite FROM Inventaire i JOIN Objets o ON o.ID = i.ID_objet WHERE i.ID_joueur = ? AND o.ForHeal = 1 GROUP BY o.ID;";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return;
+    }  
+
+    sqlite3_bind_int(stmt, 1, id_joueur);
+
+    while (sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        AfficherInfoObjet(db, sqlite3_column_int(stmt, 0));
+        printf("\033[1;32mQuantite de l'objet du haut = %d\n\033[0m", sqlite3_column_int(stmt, 1));
+    }
+
+    sqlite3_finalize(stmt);
+}
+void AfficherObjetsAttaqueInventaire(sqlite3* db, int id_joueur) {
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT o.ID, COUNT(*) AS Quantite FROM Inventaire i JOIN Objets o ON o.ID = i.ID_objet WHERE i.ID_joueur = ? AND o.ForAttack = 1 GROUP BY o.ID;";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return;
+    }  
+
+    sqlite3_bind_int(stmt, 1, id_joueur);
+
+    while (sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        AfficherInfoObjet(db, sqlite3_column_int(stmt, 0));
+        printf("\033[1;32mQuantite de l'objet du haut = %d\n\033[0m", sqlite3_column_int(stmt, 1));
+    }
+
+    sqlite3_finalize(stmt);
+}
+int ObtenirQuantiteObjHealInventaire(sqlite3* db, int id_joueur) {
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT COUNT(*) AS Quantite FROM Inventaire i JOIN Objets o ON o.ID = i.ID_objet WHERE i.ID_joueur = ? AND o.ForHeal = 1;";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return 0;
+    }  
+
+    sqlite3_bind_int(stmt, 1, id_joueur);
+
+    sqlite3_step(stmt);
+    int Quantite = sqlite3_column_int(stmt, 0);
+    sqlite3_finalize(stmt);
+    return Quantite;
+}
+int ObtenirQuantiteObjAttaqueInventaire(sqlite3* db, int id_joueur) {
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT COUNT(*) AS Quantite FROM Inventaire i JOIN Objets o ON o.ID = i.ID_objet WHERE i.ID_joueur = ? AND o.ForAttack = 1;";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return 0;
+    }  
+
+    sqlite3_bind_int(stmt, 1, id_joueur);
+
+    sqlite3_step(stmt);
+    int Quantite = sqlite3_column_int(stmt, 0);
+    sqlite3_finalize(stmt);
+    return Quantite;
 }
 
 //Inventaire
@@ -506,14 +692,32 @@ void AfficherInventaire(sqlite3* db, int id_joueur) {
 }
 
 //Ennemis
-void AttaquerEnnemis(sqlite3* db, int id_joueur, int id_ennemi) {
+void AfficherInfoEnnemi(sqlite3* db, int id_ennemi) {
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT Nom, Vie, Force FROM Ennemis WHERE ID = ?";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return;
+    } 
 
+    sqlite3_bind_int(stmt, 1, id_ennemi);
+
+    sqlite3_step(stmt);
+    unsigned const char* Nom = sqlite3_column_text(stmt, 0);
+    int Vie = sqlite3_column_int(stmt, 1);
+    int Force = sqlite3_column_int(stmt, 2);
+
+    printf("Informations de l'ennemi avec l'ID %d:\n----------\nNom: %s\nVie: %d\nForce: %d\n----------\n", id_ennemi, Nom, Vie, Force);
+    sqlite3_finalize(stmt);
+    return;
 }
 
 //Deplacement joueur
 void Menu_Deplacement(sqlite3* db, int id_joueur) {
     int choix;
-    printf("\033[0;33mVoulez vous avancer ou bien changer de lieu?\nAvancer = 1\nChanger de lieu = 2\033[0m\n");
+    printf("\033[1;33mVoulez vous avancer ou bien changer de lieu?\nAvancer = 1\nChanger de lieu = 2\033[0m\n");
     scanf("%d", &choix);
     if (choix < 2) {
         Avancer(db, id_joueur);
@@ -527,12 +731,12 @@ void Avancer(sqlite3* db, int id_joueur) {
     //Pour pas que ca soit trop complex j'ai fait un systeme de deplacement quand meme simple.
     //Le joueur peut avancer. il va soit tomber sur rien, un objet random ou bien un ennemi random. ca continue a l'infini.
     int RandomEvent = rand() % 3 + 1; // 1 = Rien, 2 = Ennemi, 3 = Objet
-
     if (RandomEvent == 1) {
         printf("Vous ne trouvez rien.\n");
     } else if (RandomEvent == 2) {
-        printf("\033[4;32mVous etes tombe sur un ennemi:\033[0m\n");
-        // Afficher l'ennemi
+        printf("\033[4;31mVous etes tombe sur un ennemi:\033[0m\n");
+        int EnnemiID = LieuTrouverEnnemiAleatoire(db, ObtenirPositionJoueur(db, id_joueur));
+        AfficherInfoEnnemi(db, EnnemiID);
         printf("Voulez vous fuir ou bien le combattre?\n1: Fuire\n2: Combattre\n");
         int choix = 0;
         scanf("%d", &choix);
@@ -540,7 +744,7 @@ void Avancer(sqlite3* db, int id_joueur) {
             printf("\033[0;31mVous avez choisi de fuire...\n\033[0m");
         } else {
             printf("\033[0;32mVous vous appretez a combattre l'ennemi!\n\033[0m");
-            //Systeme de combat
+            InitialiserCombat(db, id_joueur, EnnemiID);
         }
 
     } else {
@@ -562,4 +766,119 @@ void ChangerDeLieu(sqlite3* db, int id_joueur) {
     int Choix = 0;
     scanf("%d", &Choix);
     if (DeplacerJoueur(db, id_joueur, Choix) == 1) AfficherLieu(db, Choix);
+}
+
+//Systeme de combat
+int CalculerDegats(int force) {
+    int degats_base = force;
+    
+    int variation = (rand() % 41) - 20; //Chiffre entre -20 et 20 (ca va etre le pourcentage)
+
+    float variation_exacte = (degats_base * variation) / 100.0f;
+    int degats_finaux = degats_base + (int)variation_exacte; // Mon systeme fait en sorte que la valeur maximale de variation est la force de base + 20% de celle ci, donc 120%. (80% est le minimum)
+    
+    if (degats_finaux < 1) degats_finaux = 1; // Si le degat final est negatif, ca va le remettre a 1, le minimum
+    
+    return degats_finaux;
+}
+int InitialiserCombat(sqlite3* db, int id_joueur, int id_ennemi) {
+    Ennemi ennemi = {0};
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT Nom, Vie, Force FROM Ennemis WHERE ID = ?"; // Obtenir les informations de l'ennemi
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return -1;
+    } 
+
+    sqlite3_bind_int(stmt, 1, id_ennemi);
+
+    sqlite3_step(stmt);
+    const unsigned char* NomEnnemi = sqlite3_column_text(stmt, 0);
+    int VieEnnemi = sqlite3_column_int(stmt, 1);
+    int ForceEnnemi = sqlite3_column_int(stmt, 2);
+
+    //Inserer les valeurs de l'ennemi dans la structure temporaire
+    ennemi.vie_max = VieEnnemi;
+    ennemi.force = ForceEnnemi;
+    ennemi.vie_actuelle = VieEnnemi;
+    ennemi.id = id_ennemi;
+    strcpy(ennemi.nom, (const char*)NomEnnemi);
+
+    sqlite3_finalize(stmt);
+
+    int ForceJoueur = ObtenirForceJoueur(db, id_joueur);
+    int VieMaxJoueur = ObtenirVieJoueur(db, id_joueur);
+    int VieActuelleJoueur = VieMaxJoueur;
+
+    //Boucle de combat
+    while (VieActuelleJoueur > 0)
+    {
+        
+        int EnnemiSkipTurn = 0;
+
+        //JOUEUR
+        printf("\033[4;1;33mSTATS DU COMBAT:\n\033[0m----------\nVIE DU JOUEUR:\n----------\n%d\n----------\nVIE DE L'ENNEMI:\n----------\n%d\n----------\n", VieActuelleJoueur, ennemi.vie_actuelle);
+        printf("\nVeuillez choisir votre option:\nFuire = 1\nAttaquer = 2\nAttaquer avec objet = 3\nHeal (ennemi n'attaquera pas) = 4\n");
+        int choix = 0;
+        scanf("%d", &choix);
+        if (choix < 2) {
+            printf("\033[0;31mVous avez choisi de fuire.\n");
+            int ChanceDeSucces = rand() % 4; // 0 - 1 - 2 - 3 (1 chance sur 4 de fuire)
+            if (ChanceDeSucces == 0) {
+                return 0;
+            } else {
+                printf("Malheureusement, vous n'avez pas reussit a fuire...\n");
+            }
+        } else if (choix == 2) {
+            int DegatsInfligés = AttaquerEnnemi(&ennemi, ForceJoueur);
+            printf("\033[1;32mVous avez inflige %d de degats a %s!\n\033[0m", DegatsInfligés, ennemi.nom);
+        } else if (choix == 3) {
+            if (ObtenirQuantiteObjAttaqueInventaire(db, id_joueur) < 1) {
+                printf("Vous n'avez aucun objet d'attaque. Vous allez attaquer regulierement.\n");
+                int DegatsInfligés = AttaquerEnnemi(&ennemi, ForceJoueur);
+                printf("\033[1;32mVous avez inflige %d de degats a %s!\n\033[0m", DegatsInfligés, ennemi.nom);
+            } else {
+                printf("\033[0;32mVous vous appretez a attaquer l'ennemi avec un objet.\nVoici vos choixs:\n\033[0m");
+                AfficherObjetsAttaqueInventaire(db, id_joueur);
+                //Offrir les choixs d'objets d'attaque
+                //AttaquerEnnemi mais avec la force de l'objet qui va etre la force du joueur augmenté par un pourcentage
+            }
+        } else {
+            if (ObtenirQuantiteObjHealInventaire(db, id_joueur) < 1) {
+                printf("Vous avez aucun objet de heal. L'ennemi peut toujours vous attaquer. Vous allez faire une attaque reguliere.\n");
+                int DegatsInfligés = AttaquerEnnemi(&ennemi, ForceJoueur);
+                printf("\033[1;32mVous avez inflige %d de degats a %s!\n\033[0m", DegatsInfligés, ennemi.nom);
+            } else {
+                EnnemiSkipTurn = 1;
+                printf("Vous avez choisi de vous heal.\nVoici la liste de vos objets qui peuvent heal:\n");
+                AfficherObjetsDeHealInventaire(db, id_joueur);
+                //Offrir les choixs d'objets de heal
+                //Faire en sorte que l'ennemi n'attaque pas au prochain tour vu que je me suis heal
+            }
+        }
+
+        if (ennemi.vie_actuelle <= 0) {
+            printf("\033[4;32mVous avez gagne le combat!\n\033[0m");
+            return 1; // Retourner 1 si le joueur gagne, sinon 2
+        }
+
+        //ENNEMI
+        if (EnnemiSkipTurn == 0) {
+            int Degats = CalculerDegats(ennemi.force);
+            VieActuelleJoueur -= Degats;
+            printf("\033[0;31m%s vous a inflige %d de degats!\n\033[0m", ennemi.nom, Degats);
+        } else {
+            printf("\033[0;32mVous avez heal. L'ennemi ne peut pas vous attaquer pour ce tour.\n\033[0m");
+        }
+
+    }
+    printf("\033[0;31mVous avez perdu le combat...\n\033[0m");
+    return 2; // Si le joueur perd
+}
+int AttaquerEnnemi(Ennemi* ennemi, int forceJoueur) {
+    int Degats = CalculerDegats(forceJoueur);
+    ennemi->vie_actuelle -= Degats;
+    return Degats;
 }
