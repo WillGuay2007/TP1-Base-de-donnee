@@ -672,7 +672,7 @@ int OffrirChoixHealItem(sqlite3* db, int id_joueur) {
 
     while (ChosenItem != 1)
     {
-        printf("Veuillez entrer un nombre entre 1 et le nombre d'items disponibles pour faire votre choix.\n");
+        printf("\033[0;33mVeuillez entrer un nombre entre 1 et le nombre d'items disponibles pour faire votre choix.\033[0m\n");
         scanf("%d", &ChoixOffset);
         if (ChoixOffset > ObtenirCountChoixsHeal(db, id_joueur) || ChoixOffset <= 0) {
             printf("Nombre invalide\n");
@@ -711,7 +711,7 @@ int OffrirChoixAttackItem(sqlite3* db, int id_joueur) {
 
     while (ChosenItem != 1)
     {
-        printf("Veuillez entrer un nombre entre 1 et le nombre d'items disponibles pour faire votre choix.\n");
+        printf("\033[0;33mVeuillez entrer un nombre entre 1 et le nombre d'items disponibles pour faire votre choix.\033[0m\n");
         scanf("%d", &ChoixOffset);
         if (ChoixOffset > ObtenirCountChoixsAttaque(db, id_joueur) || ChoixOffset <= 0) {
             printf("Nombre invalide\n");
@@ -998,8 +998,8 @@ int InitialiserCombat(sqlite3* db, int id_joueur, int id_ennemi) {
                 printf("Vous avez choisi de vous heal.\nVoici la liste de vos objets qui peuvent heal:\n");
                 AfficherObjetsDeHealInventaire(db, id_joueur);
                 int ChosenItem = OffrirChoixHealItem(db, id_joueur);
+                printf("Item choisi:\n");
                 AfficherInfoObjet(db, ChosenItem);
-                //Faire en sorte que l'ennemi n'attaque pas au prochain tour vu que je me suis heal
             }
         }
 
