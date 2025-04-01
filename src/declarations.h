@@ -51,9 +51,14 @@ void AfficherObjetsDeHealInventaire(sqlite3* db, int id_joueur);
 void AfficherObjetsAttaqueInventaire(sqlite3* db, int id_joueur);
 int ObtenirQuantiteObjHealInventaire(sqlite3* db, int id_joueur);
 int ObtenirQuantiteObjAttaqueInventaire(sqlite3* db, int id_joueur);
+int OffrirChoixHealItem(sqlite3* db, int id_joueur);
+int OffrirChoixAttackItem(sqlite3* db, int id_joueur);
+int ObtenirCountChoixsHeal(sqlite3* db, int id_joueur);
+int ObtenirCountChoixsAttaque(sqlite3* db, int id_joueur);
 
 //Inventaire
 void AfficherInventaire(sqlite3* db, int id_joueur);
+void SupprimerObjetInventaire(sqlite3* db, int id_joueur, int id_objet);
 
 //Ennemis
 void AfficherInfoEnnemi(sqlite3* db, int id_ennemi);

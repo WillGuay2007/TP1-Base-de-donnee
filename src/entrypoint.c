@@ -17,6 +17,6 @@ void raylib_start(void){
 
     //Début du code.
     int ID = PromptPlayerChoice(db);
-    Menu_Deplacement(db, ID, ObtenirPositionJoueur(db, ID));
+    Menu_Deplacement(db, ID);
     return;
 }
