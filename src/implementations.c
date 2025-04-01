@@ -604,7 +604,7 @@ void AfficherObjetsDeHealInventaire(sqlite3* db, int id_joueur) {
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
         AfficherInfoObjet(db, sqlite3_column_int(stmt, 0));
-        printf("\033[1;32mQuantite de l'objet du haut = %d\n\033[0m", sqlite3_column_int(stmt, 1));
+        printf("\033[1;35mQuantite de l'objet du haut = %d\n\033[0m----------\n", sqlite3_column_int(stmt, 1));
     }
 
     sqlite3_finalize(stmt);
@@ -624,7 +624,7 @@ void AfficherObjetsAttaqueInventaire(sqlite3* db, int id_joueur) {
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
         AfficherInfoObjet(db, sqlite3_column_int(stmt, 0));
-        printf("\033[1;32mQuantite de l'objet du haut = %d\n\033[0m", sqlite3_column_int(stmt, 1));
+        printf("\033[1;35mQuantite de l'objet du haut = %d\n\033[0m----------\n", sqlite3_column_int(stmt, 1));
     }
 
     sqlite3_finalize(stmt);
@@ -672,7 +672,7 @@ int OffrirChoixHealItem(sqlite3* db, int id_joueur) {
 
     while (ChosenItem != 1)
     {
-        printf("\033[0;33mVeuillez entrer un nombre entre 1 et le nombre d'items disponibles pour faire votre choix.\033[0m\n");
+        printf("\033[0;34mVeuillez entrer un nombre entre 1 et le nombre d'items disponibles pour faire votre choix.\033[0m\n");
         scanf("%d", &ChoixOffset);
         if (ChoixOffset > ObtenirCountChoixsHeal(db, id_joueur) || ChoixOffset <= 0) {
             printf("Nombre invalide\n");
@@ -711,7 +711,7 @@ int OffrirChoixAttackItem(sqlite3* db, int id_joueur) {
 
     while (ChosenItem != 1)
     {
-        printf("\033[0;33mVeuillez entrer un nombre entre 1 et le nombre d'items disponibles pour faire votre choix.\033[0m\n");
+        printf("\033[0;34mVeuillez entrer un nombre entre 1 et le nombre d'items disponibles pour faire votre choix.\033[0m\n");
         scanf("%d", &ChoixOffset);
         if (ChoixOffset > ObtenirCountChoixsAttaque(db, id_joueur) || ChoixOffset <= 0) {
             printf("Nombre invalide\n");
@@ -758,6 +758,7 @@ int ObtenirCountChoixsHeal(sqlite3* db, int id_joueur) {
 
     int HealChoices = sqlite3_column_int(stmt, 0);
     sqlite3_finalize(stmt);
+    return HealChoices;
 
 }
 int ObtenirCountChoixsAttaque(sqlite3* db, int id_joueur) {
@@ -802,7 +803,7 @@ int ObtenirHealObjet(sqlite3* db, int id_objet) {
 //Inventaire
 void AfficherInventaire(sqlite3* db, int id_joueur) {
     sqlite3_stmt* stmt = NULL;
-    const char* query = "SELECT o.ID, o.Nom, COUNT(o.ID) AS Quantite FROM Inventaire i JOIN Objets o ON o.ID = i.ID_objet WHERE i.ID_joueur = ? GROUP BY o.id";
+    const char* query = "SELECT o.ID, o.Nom, COUNT(o.ID) AS Quantite, o.ForHeal, o.ForAttack, o.AttackOrHealPercentage FROM Inventaire i JOIN Objets o ON o.ID = i.ID_objet WHERE i.ID_joueur = ? GROUP BY o.id";
     
     if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
         LOG_SQLITE3_ERROR(db);
@@ -819,7 +820,10 @@ void AfficherInventaire(sqlite3* db, int id_joueur) {
         int ID = sqlite3_column_int(stmt, 0);
         const unsigned char* Nom = sqlite3_column_text(stmt, 1);
         int Count = sqlite3_column_int(stmt, 2);
-        printf("ID: %d\nNom: %s\nQuantite: %d\n----------\n", ID, Nom, Count);
+        int ForHeal = sqlite3_column_int(stmt, 3);
+        int ForAttack = sqlite3_column_int(stmt, 4);
+        int AttackPercentageOrHealAmount = sqlite3_column_int(stmt, 5);
+        printf("ID: %d\nNom: %s\nPeut heal: %d\nPeut attaquer: %d\nPourcentage d'attaque ou heal points: %d\nQuantite: %d\n----------\n", ID, Nom, ForHeal, ForAttack, AttackPercentageOrHealAmount, Count);
     }
     
     sqlite3_finalize(stmt);
@@ -878,16 +882,18 @@ void AfficherInfoEnnemi(sqlite3* db, int id_ennemi) {
 
 //Deplacement joueur
 void Menu_Deplacement(sqlite3* db, int id_joueur) {
-    int choix;
-    printf("\033[1;33mVoulez vous avancer ou bien changer de lieu?\nAvancer = 1\nChanger de lieu = 2\033[0m\n");
-    scanf("%d", &choix);
-    if (choix < 2) {
-        Avancer(db, id_joueur);
-    } else {
-        ChangerDeLieu(db, id_joueur);
+    while (1 > 0) {
+        int choix;
+        printf("\033[1;33mVoulez vous avancer ou bien changer de lieu?\nAvancer = 1\nChanger de lieu = 2\nAfficher inventaire = 3\n\033[0m");
+        scanf("%d", &choix);
+        if (choix <= 1) {
+            Avancer(db, id_joueur);
+        } else if (choix == 2){
+            ChangerDeLieu(db, id_joueur);
+        } else if (choix >= 3) {
+            AfficherInventaire(db, id_joueur);
+        }
     }
-
-    Menu_Deplacement(db, id_joueur);
 }
 void Avancer(sqlite3* db, int id_joueur) {
     //Pour pas que ca soit trop complex j'ai fait un systeme de deplacement quand meme simple.
@@ -933,7 +939,14 @@ void ChangerDeLieu(sqlite3* db, int id_joueur) {
 //Systeme de combat
 int HealPlayer(sqlite3* db, int MaxHealth, int* PlayerHealth, int id_objet) {
     int HealAmount = ObtenirHealObjet(db, id_objet);
-    PlayerHealth = max(PlayerHealth + HealAmount, MaxHealth);
+    
+    *PlayerHealth += HealAmount;
+    
+    if (*PlayerHealth > MaxHealth) {
+        *PlayerHealth = MaxHealth;
+    }
+    
+    printf("\033[0;32mVous avez ete heal de %d points de vie!\n\033[0m", HealAmount);
     return HealAmount;
 }
 int CalculerDegats(int force) {
@@ -1005,7 +1018,7 @@ int InitialiserCombat(sqlite3* db, int id_joueur, int id_ennemi) {
                 printf("Vous n'avez aucun objet d'attaque. Vous allez attaquer regulierement.\n");
                 AttaquerEnnemi(&ennemi, ForceJoueur);
             } else {
-                printf("\033[0;32mVous vous appretez a attaquer l'ennemi avec un objet.\nVoici vos choixs:\n\033[0m");
+                printf("\033[0;34mVous vous appretez a attaquer l'ennemi avec un objet.\nVoici vos choixs:\033[0m\n");
                 AfficherObjetsAttaqueInventaire(db, id_joueur);
                 int ChosenItem = OffrirChoixAttackItem(db, id_joueur);
                 printf("\033[32mVous vous appretez a attaquer l'ennemi avec cet objet:\033[0m\n");
@@ -1019,17 +1032,18 @@ int InitialiserCombat(sqlite3* db, int id_joueur, int id_ennemi) {
                 int DegatsInfligés = AttaquerEnnemi(&ennemi, ForceJoueur);
             } else {
                 EnnemiSkipTurn = 1;
-                printf("Vous avez choisi de vous heal.\nVoici la liste de vos objets qui peuvent heal:\n");
+                printf("Vous avez choisi de vous heal.\n\033[0;34mVoici la liste de vos objets qui peuvent heal:\033[0m\n");
                 AfficherObjetsDeHealInventaire(db, id_joueur);
                 int ChosenItem = OffrirChoixHealItem(db, id_joueur);
-                printf("Item choisi:\n");
+                printf("\033[0;34mItem choisi:\033[0m\n");
                 AfficherInfoObjet(db, ChosenItem);
+                HealPlayer(db, VieMaxJoueur, &VieActuelleJoueur, ChosenItem);
             }
         }
 
         if (ennemi.vie_actuelle <= 0) {
             printf("\033[4;32mVous avez gagne le combat!\033[0m\n");
-            return 1; // Retourner 1 si le joueur gagne, sinon 2
+            return 1; // Retourner 1 si le joueur gagne, 0 si il fuit, sinon 2 si il meurt
         }
 
         //ENNEMI
