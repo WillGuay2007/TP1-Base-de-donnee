@@ -830,7 +830,7 @@ void SupprimerObjetInventaire(sqlite3* db, int id_joueur, int id_objet) {
 
     sqlite3_finalize(stmt);
 
-    printf("\033[0;31mItem avec id %d supprimé de l'inventaire.\033[0m\n", id_objet);
+    printf("\033[0;31mItem avec id %d supprime de l'inventaire.\033[0m\n", id_objet);
 
 }
 
