@@ -55,6 +55,7 @@ int OffrirChoixHealItem(sqlite3* db, int id_joueur);
 int OffrirChoixAttackItem(sqlite3* db, int id_joueur);
 int ObtenirCountChoixsHeal(sqlite3* db, int id_joueur);
 int ObtenirCountChoixsAttaque(sqlite3* db, int id_joueur);
+int ObtenirHealObjet(sqlite3* db, int id_objet);
 
 //Inventaire
 void AfficherInventaire(sqlite3* db, int id_joueur);
@@ -69,6 +70,7 @@ void Avancer(sqlite3* db, int id_joueur);
 void ChangerDeLieu(sqlite3* db, int id_joueur);
 
 //Systeme de combat
+int HealPlayer(sqlite3* db, int MaxHealth, int* PlayerHealth, int id_objet)
 int CalculerDegats(int force);
 int InitialiserCombat(sqlite3* db, int id_joueur, int id_ennemi);
 int AttaquerEnnemi(Ennemi* ennemi, int forceJoueur);

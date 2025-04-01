@@ -779,6 +779,25 @@ int ObtenirCountChoixsAttaque(sqlite3* db, int id_joueur) {
 
     return AttackChoices;
 }
+int ObtenirHealObjet(sqlite3* db, int id_objet) {
+    sqlite3_stmt* stmt = NULL;
+    const char* query = "SELECT AttackOrHealPercentage FROM Objets WHERE ID = ?";
+    
+    if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+        LOG_SQLITE3_ERROR(db);
+        sqlite3_finalize(stmt);
+        return 0;
+    }  
+
+    sqlite3_bind_int(stmt, 1, id_objet);
+
+    sqlite3_step(stmt);
+
+    int HealAmount = sqlite3_column_int(stmt, 0);
+    sqlite3_finalize(stmt);
+
+    return HealAmount;
+}
 
 //Inventaire
 void AfficherInventaire(sqlite3* db, int id_joueur) {
@@ -912,6 +931,11 @@ void ChangerDeLieu(sqlite3* db, int id_joueur) {
 }
 
 //Systeme de combat
+int HealPlayer(sqlite3* db, int MaxHealth, int* PlayerHealth, int id_objet) {
+    int HealAmount = ObtenirHealObjet(db, id_objet);
+    PlayerHealth = max(PlayerHealth + HealAmount, MaxHealth);
+    return HealAmount;
+}
 int CalculerDegats(int force) {
     int degats_base = force;
     
