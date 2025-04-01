@@ -1038,6 +1038,7 @@ int InitialiserCombat(sqlite3* db, int id_joueur, int id_ennemi) {
                 printf("\033[0;34mItem choisi:\033[0m\n");
                 AfficherInfoObjet(db, ChosenItem);
                 HealPlayer(db, VieMaxJoueur, &VieActuelleJoueur, ChosenItem);
+                SupprimerObjetInventaire(db, id_joueur, ChosenItem);
             }
         }
 
