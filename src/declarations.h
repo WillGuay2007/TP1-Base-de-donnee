@@ -74,3 +74,4 @@ int HealPlayer(sqlite3* db, int MaxHealth, int* PlayerHealth, int id_objet);
 int CalculerDegats(int force);
 int InitialiserCombat(sqlite3* db, int id_joueur, int id_ennemi);
 int AttaquerEnnemi(Ennemi* ennemi, int forceJoueur);
+void CombattreEnnemi(sqlite3* db, int id_joueur, int id_ennemi);

@@ -912,7 +912,7 @@ void Avancer(sqlite3* db, int id_joueur) {
             printf("\033[0;31mVous avez choisi de fuire...\n\033[0m");
         } else {
             printf("\033[0;32mVous vous appretez a combattre l'ennemi!\n\033[0m");
-            InitialiserCombat(db, id_joueur, EnnemiID);
+            CombattreEnnemi(db, id_joueur, EnnemiID);
         }
 
     } else {
@@ -1065,4 +1065,12 @@ int AttaquerEnnemi(Ennemi* ennemi, int forceJoueur) {
     ennemi->vie_actuelle -= Degats;
     printf("\033[1;32mVous avez inflige %d de degats a %s!\n\033[0m", Degats, ennemi->nom);
     return Degats;
+}
+void CombattreEnnemi(sqlite3* db, int id_joueur, int id_ennemi) {
+    int FightResult = InitialiserCombat(db, id_joueur, id_ennemi);
+    if (FightResult == 1) {
+        //Si le joueur gagne
+    } else if (FightResult == 2) {
+        // Si le joueur perd
+    }
 }
